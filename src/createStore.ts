@@ -235,6 +235,7 @@ export default function createStore<
    * Note that, if you use a custom middleware, it may wrap `dispatch()` to
    * return something else (for example, a Promise you can await).
    */
+  // 所谓 dispatch 即执行一下 reducer
   function dispatch(action: A) {
     if (!isPlainObject(action)) {
       throw new Error(
@@ -261,6 +262,7 @@ export default function createStore<
       isDispatching = false
     }
 
+    // 执行 listener
     const listeners = (currentListeners = nextListeners)
     for (let i = 0; i < listeners.length; i++) {
       const listener = listeners[i]
@@ -356,6 +358,7 @@ export default function createStore<
   // When a store is created, an "INIT" action is dispatched so that every
   // reducer returns their initial state. This effectively populates
   // the initial state tree.
+  // TODO: 为什么要 dispatch INIT 一下？
   dispatch({ type: ActionTypes.INIT } as A)
 
   const store = {

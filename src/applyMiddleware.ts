@@ -65,6 +65,11 @@ export default function applyMiddleware(
       reducer: Reducer<S, A>,
       preloadedState?: PreloadedState<S>
     ) => {
+
+      // applyMiddleware 需要被执行三次
+      // 第一次接收中间件，第二次接收 createStore，第三次接收createStore 相同的参数，
+      // 因为接收createStore后，对使用者来说这个新函数就是createStore
+
       const store = createStore(reducer, preloadedState)
       let dispatch: Dispatch = () => {
         throw new Error(
@@ -73,11 +78,18 @@ export default function applyMiddleware(
         )
       }
 
+      // middle 的参数，包含 getState 和 dispatch
+      // TODO: 为什么这里用 要新定义的 dispatch，新定义的 dispatch 不是空的吗
+      // 答：这里用的diaptch 是一个函数引用（一个代替位），实际上等到用的时候，用的是93行那个compose过的 dispatch；
       const middlewareAPI: MiddlewareAPI = {
         getState: store.getState,
         dispatch: (action, ...args) => dispatch(action, ...args)
       }
       const chain = middlewares.map(middleware => middleware(middlewareAPI))
+
+      // 包装新的 dispatch，以便用户调用的时候能够顺序执行所有的中间件
+      // 这里最后传入的 store.dispatch 是用于 middleware 中直接dispatch action的，
+      // 得到的 dispathc 形如 dispatch = action => a(b(c(store.dispatch(action))))
       dispatch = compose<typeof dispatch>(...chain)(store.dispatch)
 
       return {
